@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projects
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="projects.xsd">
+    <project>
+        <id>1</id>
+        <name>First Project</name>
+        <status>disabled</status>
+    </project>
+    <project>
+        <id>2</id>
+        <name>Second Project</name>
+        <tags>
+            <tag>internal</tag>
+            <tag>2020</tag>
+        </tags>
+        <status>disabled</status>
+    </project>
+</projects>

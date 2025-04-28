@@ -1,0 +1,148 @@
+= Evaluation
+
+== Presentation
+
+Cette application est une application qui permet de rattacher des developpeurs à un projet.
+
+Un developpeur ne peut être rattaché qu'a un seul projet.
+
+La liste des projets est fournie sous forme d'un fichier XML qui décrit l'id, le nom, un statut et une liste de tags.
+Dans l'environnement de production, ce fichier pourra être mis à jour à tout moment.
+
+Le schema du fichier projects.xml est disponible dans `src/main/resources/projects.xsd`.
+
+Par exemple, le fichier suivant
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<projects
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="projects.xsd">
+    <project>
+        <id>1</id>
+        <name>First Project</name>
+        <status>disabled</status>
+    </project>
+    <project>
+        <id>2</id>
+        <name>Second Project</name>
+        <tags>
+            <tag>internal</tag>
+            <tag>2020</tag>
+        </tags>
+        <status>disabled</status>
+    </project>
+</projects>
+----
+
+== Architecture
+
+Le projet persiste ses données dans une base de données H2 en mémoire qui est détruite à de l'arrêt de l'application.
+
+Une API de type REST permet d'interagir avec l'application.
+
+== Developpement
+
+=== Pré-requis
+
+- JDK 8
+- Git
+
+=== Commandes
+
+==== Lancement de l'application
+
+[source,shell]
+----
+./mvnw spring-boot:run
+----
+
+Les webservices sont alors disponibles en http://localhost:8080 , par exemple `POST http://localhost:8080/api/developers/list`
+
+==== Lancer les tests
+
+[source,shell]
+----
+./mvnw test
+----
+
+== Questions
+
+Temps maximum estimé : ~2h
+
+=== Correction d'anomalie
+
+==== Description
+
+**TICKET-134**
+
+Lorsqu'on récupère la liste des developpeurs et qu'on ne demande pas tous les developpeurs (appel du webservice POST `/api/developers/list?all=false`), seuls les developeurs rattachés à un projet doivent être remontés.
+
+Ce n'est pas le cas actuellement.
+
+
+===== Exemple :
+
+Considérons le fichier projet suivant
+
+.projects.xml
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<projects
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="projects.xsd">
+    <project>
+        <id>1</id>
+        <name>First Project</name>
+        <status>disabled</status>
+    </project>
+    <project>
+        <id>2</id>
+        <name>Second Project</name>
+        <tags>
+            <tag>internal</tag>
+            <tag>2020</tag>
+        </tags>
+        <status>disabled</status>
+    </project>
+</projects>
+----
+
+Puis les requetes suivantes :
+
+- une requete POST http://localhost:8080/api/developers/create avec le body suivant
+[source,json]
+----
+{"name": "alice", "projectId": "1"}
+----
+- une requete POST http://localhost:8080/api/developers/create avec le body suivant
+[source,json]
+----
+{"name": "bob"}
+----
+
+La requete POST `http://localhost:8080/api/developers/list?all=false` doit retourner une reponse du type
+[source,json]
+----
+[
+    {"id":"1","name":"alice","projectId":null,"projectName":"First Project"}
+]
+----
+
+Les requêtes POST `http://localhost:8080/api/developers/list?all=true` ou `http://localhost:8080/api/developers/list` doivent retourner une réponse du type
+[source,json]
+----
+[
+    {"id":"1","name":"alice","projectId":null,"projectName":"First Project"},
+    {"id":"2","name":"bob","projectId":null,"projectName":null}
+]
+----
+
+
+==== Actions
+
+* Implementer la correction à cette anomalie en améliorant le code si nécessaire.
+* Fournir le résultat en zippant le projet avec son historique Git.
+
