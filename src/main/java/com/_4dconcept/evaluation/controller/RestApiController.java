@@ -1,28 +1,17 @@
 package com._4dconcept.evaluation.controller;
 
 import com._4dconcept.evaluation.Constants;
-import com._4dconcept.evaluation.Utils;
+import com._4dconcept.evaluation.dto.DeveloperDTO;
+import com._4dconcept.evaluation.mapper.DeveloperMapper;
 import com._4dconcept.evaluation.model.Developer;
-import com._4dconcept.evaluation.model.Project;
-import com._4dconcept.evaluation.model.Projects;
 import com._4dconcept.evaluation.repository.DeveloperRepository;
-import com._4dconcept.evaluation.BusinessException;
-import com._4dconcept.evaluation.projects.ProjectsFileHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -34,63 +23,36 @@ public class RestApiController {
     @Autowired
     private DeveloperRepository DeveloperRepository;
 
-    @Value("${project.file.path}")
-    private String projectFilePath;
+    @Autowired
+    private DeveloperMapper developerMapper;
 
     /**
-     *
-     * @return
+     * @param showAllDeveloper - Get parameter from URL to know if it has to return the list of active or inactive developer
+     * @return ResponseEntity - return an HTTP response containing the list of developer active or inactive depending on the get parameter
      */
     @PostMapping("developers/list")
-    public ResponseEntity<?> listDevelopers(HttpServletRequest request){
-        String allDevelopers = request.getParameter("all");
-        boolean allDevelopers2 = false;
-        if(! Utils.isStringNullOrEmptyOrBlank(allDevelopers)){
-            allDevelopers2 = Boolean.parseBoolean(allDevelopers);
-            if(!allDevelopers2){
-                LOG.warn("Should return only active developer");
-            }
-        }
+    public ResponseEntity<?> listDevelopers( @RequestParam(value = "all", required = false, defaultValue = "true") boolean showAllDeveloper) {
         try {
-            List<Developer> developers = DeveloperRepository.findAll();
+            List<Developer> listDevelopers = showAllDeveloper
+                ? DeveloperRepository.findAll()
+                : DeveloperRepository.findAllByProjectIdNotNull();
 
-            ArrayList<DeveloperView> ds = new ArrayList<>();
-            for(int i = 0; i < developers.size(); i++) {
-                Developer developer = developers.get(i);
+            List<DeveloperDTO> listDeveloperDTO = developerMapper.toDtoList(listDevelopers);
 
-                DeveloperView d = new DeveloperView(developer.getId(), developer.getName());
-
-                Projects projects = ProjectsFileHelper.loadProjects(projectFilePath);
-                if(developer.getProjectId() != null) {
-                    for (int j = 0; j < projects.getProjects().size(); j++) {
-                        if (developer.getProjectId().equals(projects.getProjects().get(j).getId())) {
-                            d.setProjectName(projects.getProjects().get(j).getName());
-                        }
-                    }
-                }
-
-                if (Constants.DEVELOPER_STATUS_ACTIVE.equals(developer.getStatus())) {
-                    ds.add(d);
-                } else {
-                    LOG.error("The developer is inactive");
-                }
-            }
-
-            return ResponseEntity.ok(ds);
+            return ResponseEntity.ok(listDeveloperDTO);
         } catch(Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(200).body("Error listing developers");
+            LOG.error("Error listing developers : {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error listing developers");
         }
     }
 
     /**
      *
      * @param developer - the developer to create
-     * @return
+     * @return ResponseEntity - return an HTTP response to confirm the creation was made successfully
      */
     @PostMapping("developers/create")
-    public ResponseEntity ceateDevelopers(@RequestBody DeveloperView developer){
-
+    public ResponseEntity createDevelopers(@RequestBody DeveloperDTO developer) {
         try {
             Developer developerToCreate = new Developer();
             developerToCreate.setName(developer.getName());
@@ -101,7 +63,7 @@ public class RestApiController {
 
            return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.CREATED).body("Failed to create");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create");
         }
     }
 }

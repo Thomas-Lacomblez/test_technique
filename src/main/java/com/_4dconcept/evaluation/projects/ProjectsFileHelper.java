@@ -32,15 +32,11 @@ public class ProjectsFileHelper {
             o.close();
 
             String content = o.toString();
-
-            System.out.println(content);
-
             Unmarshaller unmarshaller = newUnmarshaller();
-            Projects unmarshal = (Projects) unmarshaller.unmarshal(new StringReader(content));
 
-            return unmarshal;
+            return (Projects) unmarshaller.unmarshal(new StringReader(content));
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("an error occurred while trying to read the content of the project file");
             throw new BusinessException(e);
         } catch (JAXBException e) {
             LOG.error("Not parseable file");
@@ -50,8 +46,7 @@ public class ProjectsFileHelper {
 
     public static Unmarshaller newUnmarshaller() throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(Projects.class);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-        return unmarshaller;
+        return context.createUnmarshaller();
     }
 
 }

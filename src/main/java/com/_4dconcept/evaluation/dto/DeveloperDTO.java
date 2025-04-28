@@ -1,16 +1,16 @@
-package com._4dconcept.evaluation.controller;
+package com._4dconcept.evaluation.dto;
 
-public class DeveloperView {
+public class DeveloperDTO {
 
     private String id; // used in listDevelopers
     private String name; // used in listDevelopers and createDeveloper
     private String projectId; // used for createDeveloper
     private String projectName; // used in listDevelopers
 
-    public DeveloperView() {
+    public DeveloperDTO() {
     }
 
-    public DeveloperView(String id, String name) {
+    public DeveloperDTO(String id, String name) {
         this.id = id;
         this.name = name;
     }
