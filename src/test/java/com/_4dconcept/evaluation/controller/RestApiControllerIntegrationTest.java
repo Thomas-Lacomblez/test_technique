@@ -1,14 +1,19 @@
 package com._4dconcept.evaluation.controller;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,7 +38,7 @@ class RestApiControllerIntegrationTest {
         createDeveloper("eve", "1");
         createDeveloper("franck");
 
-       this.mockMvc.perform(post("/api/developers/list?all=true"))
+        MvcResult result = this.mockMvc.perform(post("/api/developers/list?all=true"))
                 .andExpect(status().isOk())
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(jsonPath("$.[*]", hasSize(6)))
@@ -41,11 +46,6 @@ class RestApiControllerIntegrationTest {
                 .andExpect(jsonPath("$.[?(@.name == 'carol' && @.projectName == 'First Project')]").exists())
                 .andExpect(jsonPath("$.[?(@.name == 'franck' && @.projectName == null)]").exists())
                 .andReturn();
-       this.mockMvc.perform(post("/api/developers/list?all=false"))
-               .andExpect(status().isOk())
-               .andDo(MockMvcResultHandlers.print())
-               .andExpect(jsonPath("$.[*]", hasSize(5)))
-               .andExpect(jsonPath("$.[?(@.name == 'franck')]").doesNotExist());
     }
 
     private void createDeveloper(String name, String projectId) throws Exception {

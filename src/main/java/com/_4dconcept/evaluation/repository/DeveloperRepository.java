@@ -10,6 +10,4 @@ import java.util.List;
 public interface DeveloperRepository extends JpaRepository<Developer, String> {
 
     List<Developer> findByProjectId(String projectId);
-
-    List<Developer> findAllByProjectIdNotNull();
 }
